@@ -1,0 +1,5 @@
+groups:
+  - name: uptime_rules
+    rules:
+      - record: node_cpu_clear_uptime
+        expr: time() - node_boot_time_seconds
