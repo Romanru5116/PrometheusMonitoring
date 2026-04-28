@@ -24,6 +24,9 @@
 ноуд экспортер развернут и работает. Адрес.http://localhost:9100/
 ![](https://github.com/Romanru5116/PrometheusMonitoring/blob/43dad15ab2f0477bec6280b3b389d1d377ebe7e1/PIC/Screenshot_nodeexporter_from%202026-04-06%2017-47-38.png)
 метрики собирает самфые простые: только HW
+
+локальные диреткории созданы
+![](https://github.com/Romanru5116/PrometheusMonitoring/blob/38173749b3875868f38dc54df61bc2cfa729de40/PIC/Screenshot%20dirlistptomfrom%202026-04-28%2021-34-48.png)
 - Задача2
  картинка конфиг Кубер
 ![](https://github.com/Romanru5116/ProjectKuber1/blob/ceb9620e1e926602089ac4b7930ecbf16fa1dd4c/PIC/Screenshot%20Kuber_nodes%20from%202026-04-24%2010-51-56.png)
