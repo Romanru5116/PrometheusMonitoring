@@ -1,0 +1,57 @@
+решение задачи подключения мониторинга Пром-ом Кубера
+  1. Обеспечение доступа Prometheus к API Kubernetes
+Prometheus должен иметь права на чтение ресурсов Kubernetes (Nodes, Pods, Services, Endpoints). 
+deckhouse.io
+deckhouse.io
+Если Prometheus установлен через Helm (kube-prometheus-stack), права уже настроены.
+Если Prometheus установлен вручную, необходимо создать ClusterRole, ClusterRoleBinding и ServiceAccount с разрешениями get, list, watch для ресурсов API. 
+Selectel
+Selectel
+2. Настройка Scrape Configuration (Обнаружение целей)
+Вам нужно добавить в конфигурацию Prometheus (prometheus.yaml или через ConfigMap) секцию scrape_configs для обнаружения узлов, подов и сервисов.
+Пример настроек для kubernetes_sd_configs (добавить в configmap prometheus):
+yaml
+scrape_configs:
+  # Мониторинг узлов (Nodes)
+  - job_name: 'kubernetes-nodes'
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics
+
+  # Мониторинг подов (Pods) с аннотациями prometheus.io
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+Используйте код с осторожностью.
+Эти настройки заставят Prometheus собирать метрики с любых подов, у которых установлены аннотации prometheus.io/scrape: "true". 
+Plural.sh
+Plural.sh
