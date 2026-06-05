@@ -11,25 +11,55 @@ ps aux | grep prometheus
 1)настроить доступы кубер с помощью rbac
 
 либо вот так:
-Для настройки мониторинга Kubernetes с уже развернутым Prometheus без Helm, необходимо настроить обнаружение сервисов (Service Discovery) в конфигурационном файле Prometheus (prometheus.yml) и развернуть дополнительные агенты/экспортеры для K8s.Главный процесс состоит из настройки встроенных механизмов Service Discovery для различных компонентов кластера.1. Настройка Service Discovery для Kubernetes
-1. Настройка Service Discovery для KubernetesPrometheus имеет встроенные механизмы (kubernetes_sd_configs), которые позволяют ему запрашивать API-сервер Kubernetes для автоматического обнаружения подов, нод, сервисов и эндпоинтов.В раздел scrape_configs файла prometheus.yml нужно добавить следующие конфигурационные блоки:Мониторинг подов (Pods)Позволяет собирать метрики с самих приложений, запущенных в кластере (если они предоставляют /metrics).
-В раздел scrape_configs файла prometheus.yml нужно добавить следующие конфигурационные блоки:Мониторинг подов (Pods)Позволяет собирать метрики с самих приложений, запущенных в кластере (если они предоставляют /metrics).yamlscrape_configs:
-  - job_name: 'kubernetes-pods'
+Настройка мониторинга Kubernetes, когда Prometheus уже работает, требует развертывания компонентов сбора метрик (cAdvisor, kube-state-metrics, node-exporter) и обновления конфигурации ConfigMap самого Prometheus для их опроса (pull-модель). Все действия выполняются через манифесты (.yaml файлы) с помощью утилиты kubectl.Шаг 1. Развертывание базовых компонентовЧтобы собирать метрики самого кластера и его объектов, вам понадобятся три основных агента:cAdvisor (встроен в kubelet, отвечает за мониторинг контейнеров).Node Exporter (мониторинг хостовых ОС узлов).Kube State Metrics (сбор метрик жизненного цикла подов, деплойментов и т.д.).Вы можете скачать и применить готовые манифесты для Node Exporter и Kube State Metrics из официальных репозиториев:bash# Применяем Kube State Metrics
+kubectl apply -f https://githubusercontent.com
+kubectl apply -f https://githubusercontent.com
+kubectl apply -f https://githubusercontent.com
+kubectl apply -f https://githubusercontent.com
+kubectl apply -f https://githubusercontent.com
+
+# Применяем Node Exporter (DaemonSet)
+kubectl apply -f https://githubusercontent.com
+kubectl apply -f https://githubusercontent.com
+Используйте код с осторожностью.Шаг 2. Настройка scrape_configs в PrometheusЧтобы Prometheus начал собирать метрики с созданных сервисов, обновите его конфигурационный файл. Обычно он хранится в ConfigMap (например, с именем prometheus-server или prometheus-core).Отредактируйте конфигурацию, добавив блоки scrape_configs для автодискавери подов и узлов:yamlscrape_configs:
+  # 1. Мониторинг узлов (cAdvisor через kubelet)
+  - job_name: 'kubernetes-nodes-cadvisor'
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      insecure_skip_verify: true
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
     kubernetes_sd_configs:
-      - role: pod
+      - role: node
     relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-        action: keep
-        regex: true
-      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
-        action: replace
-        target_label: __metrics_path__
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
         regex: (.+)
-      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-        action: replace
-        regex: ([^:]+)(?::\d+)?;(\d+)
-        replacement: $1:$2
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+
+  # 2. Мониторинг подов через Kube State Metrics
+  - job_name: 'kubernetes-service-endpoints'
+    kubernetes_sd_configs:
+      - role: endpoints
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_label_app_kubernetes_io_name]
+        regex: kube-state-metrics
+        action: keep
+
+  # 3. Мониторинг состояния серверов (Node Exporter)
+  - job_name: 'kubernetes-nodes'
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*):10250'
+        replacement: '${1}:9100'
         target_label: __address__
+Используйте код с осторожностью.Шаг 3. Применение измененийПосле того как вы изменили ConfigMap, обновите конфигурацию запущенного пода Prometheus без необходимости его полного перезапуска. Отправьте POST-запрос на его внутренний API:
 
 2. Мониторинг Нод (Kubelet / cAdvisor)Сбор информации об утилизации ресурсов физических узлов (CPU, RAM, диск).
    Сбор информации об утилизации ресурсов физических узлов (CPU, RAM, диск).yaml  - job_name: 'kubernetes-nodes'
