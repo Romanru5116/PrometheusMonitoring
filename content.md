@@ -7,24 +7,129 @@ ps aux | grep prometheus
 
 ДЛля настройки доступа от Прометеус к Кубернетес можно либо с помощью helm развернуть и далее  выключить Прометеус в составе Кубернетес, либо настраивать отдельно от Прометеус до кубков:
 
+Для настройки мониторинга Kubernetes без использования Helm, вам необходимо настроить RBAC (права доступа для получения списка подов/сервисов), внедрить Service Discovery через Kubernetes API и развернуть базовые экспортеры (например, node-exporter и kube-state-metrics).Для настройки сбора метрик с объектов Kubernetes выполните следующие 5 шагов:Шаг 1. Настройка ServiceAccount, ClusterRole и ClusterRoleBindingPrometheus должен иметь доступ к API Kubernetes, чтобы автоматически обнаруживать поды, ноды и сервисы.Создайте файл prometheus-cluster-role.yaml:yamlapiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: monitoring # замените на ваш namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus
+  namespace: monitoring
+Используйте код с осторожностью.Примените конфигурацию: kubectl apply -f prometheus-cluster-role.yaml.Шаг 2. Настройка Service Discovery в конфигурации Prometheus (ConfigMap)В основном конфигурационном файле Prometheus (обычно это ConfigMap) нужно добавить job для обнаружения подов, нод и эндпоинтов кластера.Добавьте следующие блоки в секцию scrape_configs вашего файла prometheus.yml:yamlscrape_configs:
+  # 1. Сбор метрик с API Kubernetes для информации о нодах и эндпоинтах
+  - job_name: 'kubernetes-apiservers'
+    kubernetes_sd_configs:
+    - role: endpoints
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+      action: keep
+      regex: default;kubernetes;https
 
-1)настроить доступы кубер с помощью rbac
+  # 2. Сбор метрик с каждой ноды кластера
+  - job_name: 'kubernetes-nodes'
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+    - role: node
 
-либо вот так:
-Для того чтобы настроить мониторинг Kubernetes, если сам Prometheus уже развернут без использования Helm, вам необходимо реализовать две основные задачи: настроить сбор метрик самого кластера и обеспечить обнаружение (Service Discovery) всех сервисов и подов.Для этой цели используется стандартная конфигурация Prometheus (prometheus.yml), в которой задаются scrape_configs для обращения к Kubernetes API, Kube-state-metrics и Node Exporter.Вот пошаговый процесс настройки:Шаг 1. Разверните системные экспортерыPrometheus не собирает данные о состоянии кластера «из коробки». Вам потребуются два базовых компонента:Node Exporter: собирает метрики использования ресурсов каждой ноды (процессор, память, диск).Kube-state-metrics: слушает Kubernetes API и выдает метрики о состоянии всех подов, деплойментов и сервисов.Создайте манифесты (Deployment, Service) для этих компонентов и разверните их через kubectl apply -f [имя_файла].Шаг 2. Настройте Service Discovery в prometheus.ymlВ конфигурационный файл Prometheus необходимо добавить правила автоматического поиска подов, сервисов и эндпоинтов в Kubernetes. Для этого используются специальные типы обнаружения: kubernetes_sd_configs.Отредактируйте ConfigMap, в котором хранятся настройки вашего Prometheus, и добавьте следующие блоки в секцию scrape_configs:
-Глоссарий IAM
-Что такое управление доступом на основе ролей (RBAC)?
-Управление доступом на основе ролей (Role-Based Access Control - RBAC) использует определенные роли и привилегии для ограничения доступа авторизованным пользователям к системам. RBAC является основой доступа с наименьшими привилегиями, и его также можно использовать для реализации других моделей доступа, таких как управление доступом на основе атрибутов (Attribute-Based Access Control - ABAC).
-
-Как работает управление доступом на основе ролей?
-Идея управления доступом на основе ролей проста: ограничить доступ пользователей к системам и данным только тем минимумом, который им необходим для выполнения их работы, и не более того — эта концепция называется принципом наименьших привилегий (иногда сокращенно PoLP).
-
-В среде доступа на основе ролей роль пользователя в организации определяет конкретные сетевые разрешения, которые ему предоставляются. Это означает, что сотрудники с более низким уровнем доступа не имеют доступа к конфиденциальной информации и ресурсам, но уровни доступа на основе ролей обычно более детализированы. Когда управление RBAC реализовано правильно, пользователи не должны иметь доступа к каким-либо ресурсам за пределами назначенных им областей работы; например, сотрудники отдела маркетинга не должны иметь доступа к средам разработки, и наоборот.
-
-Для того чтобы настроить мониторинг Kubernetes, если сам Prometheus уже развернут без использования Helm, вам необходимо реализовать две основные задачи: настроить сбор метрик самого кластера и обеспечить обнаружение (Service Discovery) всех сервисов и подов.Для этой цели используется стандартная конфигурация Prometheus (prometheus.yml), в которой задаются scrape_configs для обращения к Kubernetes API, Kube-state-metrics и Node Exporter.Вот пошаговый процесс настройки:
-Шаг 1. Разверните системные экспортерыPrometheus не собирает данные о состоянии кластера «из коробки». Вам потребуются два базовых компонента:Node Exporter: собирает метрики использования ресурсов каждой ноды (процессор, память, диск).Kube-state-metrics: слушает Kubernetes API и выдает метрики о состоянии всех подов, деплойментов и сервисов.Создайте манифесты (Deployment, Service) для этих компонентов и разверните их через kubectl apply -f [имя_файла].
-Шаг 2. Настройте Service Discovery в prometheus.ymlВ конфигурационный файл Prometheus необходимо добавить правила автоматического поиска подов, сервисов и эндпоинтов в Kubernetes. Для этого используются специальные типы обнаружения: kubernetes_sd_configs.Отредактируйте ConfigMap, в котором хранятся настройки вашего Prometheus, и добавьте следующие блоки в секцию scrape_configs:
-
-
+  # 3. Автоматическое обнаружение подов, на которых установлен лейбл prometheus.io/scrape: 'true'
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+    - role: pod
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      action: keep
+      regex: true
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+      action: replace
+      target_label: __metrics_path__
+      regex: (.+)
+    - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+      action: replace
+      regex: ([^:]+)(?::\d+)?;(\d+)
+      replacement: $1:$2
+      target_label: __address__
+Используйте код с осторожностью.Примените новый ConfigMap и перезапустите поды Prometheus.Шаг 3. Добавление kube-state-metrics (KSM)kube-state-metrics отслеживает состояние объектов K8s (деплойментов, использования памяти и ЦПУ, перезапусков). Его нужно развернуть вручную.Скачайте манифесты из официального репозитория K8s KSM.Примените их: kubectl apply -f https://github.comНастройте добавленный Service для KSM в scrape_configs вашего Prometheus для автоматического сбора.Шаг 4. Настройка node-exporter для мониторинга хостовnode-exporter собирает системные метрики (загрузка CPU, RAM, диски). В кластере Kubernetes его лучше разворачивать как DaemonSet, чтобы он работал на каждой ноде.Создайте манифест node-exporter-daemonset.yaml.yamlapiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: node-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: node-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: node-exporter
+    spec:
+      hostPID: true
+      hostIPC: true
+      hostNetwork: true
+      containers:
+      - name: node-exporter
+        image: quay.io/prometheus/node-exporter:v1.8.2 # проверьте актуальную версию
+        args:
+        - --path.rootfs=/host
+        resources:
+          limits:
+            cpu: 250m
+            memory: 180Mi
+          requests:
+            cpu: 102m
+            memory: 50Mi
+        volumeMounts:
+        - name: rootfs
+          mountPath: /host
+          readOnly: true
+          mountPropagation: HostToContainer
+      volumes:
+      - name: rootfs
+        hostPath:
+          path: /
+Используйте код с осторожностью.Создайте соответствующий Service в K8s для node-exporter, чтобы Prometheus мог забирать метрики, и добавьте таргет в конфигурацию (или используйте ServiceMonitor, если вы используете Prometheus Operator без Helm).Шаг 5. Аннотирование ваших приложений в K8sЧтобы Prometheus автоматически находил метрики ваших запущенных микросервисов, вам нужно добавить специальные аннотации в манифест развёртывания (Deployment) каждого из них:yamlspec:
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080" # порт, на котором приложение слушает эндпоинт /metrics
 Панель free
 ![панель_free RAM)](https://github.com/Romanru5116/PrometheusMonitoring/blob/083ab62f41d921a313682f76adbaf303590ca9f6/PIC/ScreenshotDASHFREERAMfrom%202026-05-07%2009-23-27.png)
