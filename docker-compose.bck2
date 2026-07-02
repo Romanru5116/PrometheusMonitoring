@@ -63,13 +63,11 @@ services:
     image: grafana/grafana:latest
     container_name: grafana
     volumes:
-#подключение локального фафйла конфигурации
-      - /home/romanru/PrometheusMonitoring/grafana/config/grafana.ini:/etc/grafana/grafana.ini:ro
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=secret
+      - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
       - "3000:3000"
