@@ -15,7 +15,7 @@
 сверх задача: хранить конфиги графана в git
 для этого  в явном виде необхлодимо  указать место хранения конфига в docker-compose ("volume")
 не с первого раза но получилось - пока только grafana.ini
-![уcпешный старт]9https://github.com/Romanru5116/PrometheusMonitoring/blob/cbb1b11060cb573c6de4f5f676448f0d33f49fee/PIC/ScreenshotconfgiGrafanain%20from%202026-07-02%2010-31-20.png)
+![уcпешный старт](https://github.com/Romanru5116/PrometheusMonitoring/blob/cbb1b11060cb573c6de4f5f676448f0d33f49fee/PIC/ScreenshotconfgiGrafanain%20from%202026-07-02%2010-31-20.png)
 
 из осложнений пришлось переделывать тип авторизации в git с https на ssh (git set url) результат: успех. Изщменения запушено в этот реп от другого пользователя.
 
