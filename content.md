@@ -1,3 +1,5 @@
+#Grafana структура обмена файлов
+![картинка](https://github.com/Romanru5116/PrometheusMonitoring/blob/d1190d795eaf43ff9ee52d2ad4d07aca3da757a4/PIC/ScreenshotGarafana%20dateRotate%20from%202026-07-03%2011-08-02.png)
 # Целевая картина хранения конфига Графана в git
 ![крупно](https://github.com/Romanru5116/PrometheusMonitoring/blob/88def64a859dc8d4184430a9a222ef66c22be05a/PIC/ScreenshotGrafanaTotal%20from%202026-07-03%2010-45-55.png)
 ![детально1](https://github.com/Romanru5116/PrometheusMonitoring/blob/88def64a859dc8d4184430a9a222ef66c22be05a/PIC/ScreenshotGrafanaDetail1%20from%202026-07-03%2010-46-52.png)
