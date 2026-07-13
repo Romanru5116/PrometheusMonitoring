@@ -64,7 +64,7 @@ services:
     container_name: grafana
     volumes:
 #подключение локального фафйла конфигурации
-      - ./grafana/config/grafana.ini:/etc/grafana/grafana.ini:ro
+      - /home/romanru/PrometheusMonitoring/grafana/config/grafana.ini:/etc/grafana/grafana.ini:ro
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
