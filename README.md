@@ -11,6 +11,13 @@
 - ОТЧЕТНОСТЬ: периодическая раз в неделю
 - МАТЕРИАЛЫ ПРОЕКТА: здесь же на гит+ внизу content.md
 
+статус 130726
+считаем задачу переноса конфига исключительно в git решенной
+заодно полечили конфиг алертманагера в рамках issue
+скриншоты:
+![чистый лог через исправлени конфига доккер компоуз](https://github.com/Romanru5116/PrometheusMonitoring/blob/20dff21e302c1f2398ec82d3a66b5012f846b448/PIC/ScreenshotContainerAltmanClearfrom%202026-07-13%2015-33-47.png
+![вебморда](https://github.com/Romanru5116/PrometheusMonitoring/blob/20dff21e302c1f2398ec82d3a66b5012f846b448/PIC/ScreenshotAlertManWEB%20VIEW%20from%202026-07-13%2015-41-14.png)
+
 статус 020726
 подзадачи для Задача1: хранить конфиги графана в git
 для этого  в явном виде необхлодимо  указать место хранения конфига в docker-compose ("volume")
