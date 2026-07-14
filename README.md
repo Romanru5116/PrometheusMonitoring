@@ -23,6 +23,8 @@
 результат:![промежуточный](https://github.com/Romanru5116/PrometheusMonitoring/blob/6ad9622e53841ff3ba7a352dc6c0036605bd9c20/PIC/Screenshottarget_process%20from%202026-07-15%2002-03-21.png)
 3. Базовые PromQL запросы в графана
 пока интеграционная цепочка не работает  целиком,ждем-с
+### по пути решили задачу праильынх конфигов- логи контейнера очистились
+![логи скрин](https://github.com/Romanru5116/PrometheusMonitoring/blob/d6864e1606961293c8115395b40e69543214a99f/PIC/ScreenshotProccexp_succesdocker%20from%202026-07-14%2018-38-42.png)
 
 
 статус 130726
