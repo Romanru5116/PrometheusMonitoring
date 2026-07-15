@@ -32,3 +32,7 @@ scrape_configs:
     scrape_interval: 30s
     static_configs:
       - targets: ['localhost:9090']
+  #описание для процесс мониторинга
+  - job_name: 'process_exporter'
+    static_configs:
+      - targets: ['localhost:9256']
