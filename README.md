@@ -16,8 +16,12 @@
 ### решаем задачу настройки панели мониторинга потребления памяти попроцессно.
 для этого: 
 1.Установка и настройка Process Exporter
-результат:ошибки пофкисили в процессе работает- вебморда
+результат работает- вебморда
 ![web](https://github.com/Romanru5116/PrometheusMonitoring/blob/6a9703f1ff8832fcfe53b821ea9c5b21b96068ab/PIC/Screenshot%20Web_proc_from%202026-07-15%2002-01-06.png)
+сложности в процессе: 
+структура директорий создал 
+добавил запуск этого экспортёра как сервис в docker compose
+отладил и  пофиксил конфиг dockercompose.yml в процессе работы
 2.Добавление в prometheus.yml 
 целевых точек
 результат:![промежуточный](https://github.com/Romanru5116/PrometheusMonitoring/blob/6ad9622e53841ff3ba7a352dc6c0036605bd9c20/PIC/Screenshottarget_process%20from%202026-07-15%2002-03-21.png)
