@@ -90,3 +90,21 @@ services:
     networks:
       - monitoring
     restart: unless-stopped
+
+  process-exporter:
+    image: ncabatoff/process-exporter:latest
+    container_name: process-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - ./ProcessExporter/config/config.yml:/config/config.yml:ro
+    command:
+      - '-procfs=/host/proc'
+      - '-config.path=/config/config.yml'
+    ports:
+      - "9256:9256"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+    # Для отслеживания процессов всех пользователей требуется root
+#    user: root 
