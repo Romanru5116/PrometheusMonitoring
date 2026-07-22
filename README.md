@@ -11,6 +11,12 @@
 - ОТЧЕТНОСТЬ: перед собой - периодическая раз в неделю
 - МАТЕРИАЛЫ ПРОЕКТА: здесь же на гит+ внизу content.md
 
+## статус 220726
+решена задача инсталляции кубера на ноут2.  isue
+смысл: иметь прим ерно одинаковый конфиг на устройствах.
+![установлен](https://github.com/Romanru5116/PrometheusMonitoring/blob/0d5cbbf476b3cbd5b75a8ac70981ae895d0ae3ba/PIC/ScreenshotNote2_MinikubeInstall%20from%202026-07-22%2009-26-11.png)
+![rjконфиг_как](https://github.com/Romanru5116/PrometheusMonitoring/blob/0d5cbbf476b3cbd5b75a8ac70981ae895d0ae3ba/PIC/ScreenshotNote2_minikubeconfig_%20from%202026-07-22%2009-31-42.png)
+![конфиг](https://github.com/Romanru5116/PrometheusMonitoring/blob/0d5cbbf476b3cbd5b75a8ac70981ae895d0ae3ba/PIC/ScreenshotNote2_MiniKube_not_config%20from%202026-07-22%2009-29-24.png)
 
 ## статус для себя: 160726
  ##решаем подзадачу понять 'где находится"
