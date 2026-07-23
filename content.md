@@ -143,4 +143,6 @@ spec:
 Панель free
 
 мате5риалы https://last9.io/blog/prometheus-with-docker-compose/
+##где графана хранит дашборды
+![](https://github.com/Romanru5116/PrometheusMonitoring/blob/a560cccc52057afdf67f43aacb6b534247196a83/PIC/ScreenshotgrafanaSavedash%20from%202026-07-23%2009-45-12.png)
 ![панель_free RAM)](https://github.com/Romanru5116/PrometheusMonitoring/blob/083ab62f41d921a313682f76adbaf303590ca9f6/PIC/ScreenshotDASHFREERAMfrom%202026-05-07%2009-23-27.png)
