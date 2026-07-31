@@ -61,12 +61,15 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    user: "0"
     container_name: grafana
     volumes:
 #подключение локального фафйла конфигурации
       - ./grafana/config/grafana.ini:/etc/grafana/grafana.ini:ro
-      - grafana_data:/var/lib/grafana
       - ./grafana/config/provisioning:/etc/grafana/provisioning
+      - ./grafana/data:/var/lib/grafana
+
+
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=secret

@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: 'Git-Dashboards'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10  # Grafana будет проверять изменения в JSON каждые 10 секунд
+    options:
+      path: /etc/grafana/provisioning/dashboards_json
